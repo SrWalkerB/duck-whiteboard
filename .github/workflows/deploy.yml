@@ -1,0 +1,60 @@
+name: Deploy
+
+# Roda depois que o CI passa na branch main, ou manualmente (com escolha de modo).
+on:
+  workflow_run:
+    workflows: ['CI']
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Modo de deploy'
+        default: http
+        type: choice
+        options: [http, tls, traefik]
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy via SSH
+    runs-on: ubuntu-latest
+    # Só deploya em disparo manual OU quando o CI concluiu com sucesso.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    steps:
+      # ---------------------------------------------------------------
+      # Requer estes Secrets no repositório (Settings > Secrets > Actions):
+      #   SSH_HOST      IP/host do servidor          (ex.: 147.93.3.47)
+      #   SSH_USER      usuário SSH
+      #   SSH_PASSWORD  senha SSH
+      #   SSH_PORT      porta SSH (opcional, padrão 22)
+      #   DEPLOY_PATH   caminho do repo no servidor  (ex.: /opt/duck-whiteboard)
+      # Opcional (Variables):
+      #   DEPLOY_MODE   http | tls | traefik  (padrão http)
+      #
+      # Obs.: autenticação por senha é menos segura que por chave SSH; se puder,
+      # troque SSH_PASSWORD por SSH_KEY (key:) mais tarde. O .env do deploy já
+      # precisa existir no servidor (docker/.env é ignorado pelo git).
+      # ---------------------------------------------------------------
+      - name: Deploy
+        uses: appleboy/ssh-action@v1.2.5
+        env:
+          DEPLOY_MODE: ${{ github.event.inputs.mode || vars.DEPLOY_MODE || 'http' }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          port: ${{ secrets.SSH_PORT || '22' }}
+          username: ${{ secrets.SSH_USER }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          # Passa as variáveis pro shell remoto (evita interpolar no script).
+          envs: DEPLOY_MODE,DEPLOY_PATH
+          script: |
+            set -euo pipefail
+            cd "$DEPLOY_PATH"
+            git pull --ff-only
+            ./docker/deploy.sh "$DEPLOY_MODE"

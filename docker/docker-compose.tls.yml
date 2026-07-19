@@ -1,0 +1,23 @@
+# Override: HTTPS standalone. O próprio Caddy do container emite e renova o
+# certificado (Let's Encrypt) para ${APP_DOMAIN}. Requer o domínio apontando
+# para o servidor e as portas 80/443 abertas.
+#
+# Uso:  ./deploy.sh tls      (ou: docker compose -f docker-compose.yml -f docker-compose.tls.yml up -d)
+# No .env, defina APP_DOMAIN e HTTP_PORT=80.
+
+services:
+  web:
+    environment:
+      # O site block do Caddy passa a ser o domínio → dispara o TLS automático.
+      SITE_ADDRESS: ${APP_DOMAIN:?defina APP_DOMAIN no .env para o modo tls}
+    ports:
+      # A :80 (do base) é o desafio ACME; aqui adicionamos a :443 (HTTPS).
+      - "${HTTPS_PORT:-443}:443"
+    volumes:
+      # Persiste os certificados entre deploys (evita re-emitir e bater no rate limit).
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:

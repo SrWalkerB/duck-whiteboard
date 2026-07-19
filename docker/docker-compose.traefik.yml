@@ -1,0 +1,27 @@
+# Override: rodar atrás de um Traefik já existente. O container não publica
+# porta; entra na rede do Traefik e declara labels de roteamento + TLS.
+# O Traefik cuida do certificado (assumindo um entrypoint e um certresolver
+# já configurados nele).
+#
+# Uso:  ./deploy.sh traefik
+# No .env, defina APP_DOMAIN (e, se diferirem, PROXY_NETWORK / TRAEFIK_ENTRYPOINT / CERT_RESOLVER).
+
+services:
+  web:
+    ports: !reset [] # não publica porta no host; o acesso é via Traefik
+    networks:
+      - proxy
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: ${PROXY_NETWORK:-proxy}
+      traefik.http.routers.duckboard.rule: Host(`${APP_DOMAIN:?defina APP_DOMAIN no .env para o modo traefik}`)
+      traefik.http.routers.duckboard.entrypoints: ${TRAEFIK_ENTRYPOINT:-websecure}
+      traefik.http.routers.duckboard.tls: "true"
+      traefik.http.routers.duckboard.tls.certresolver: ${CERT_RESOLVER:-le}
+      traefik.http.services.duckboard.loadbalancer.server.port: "80"
+
+networks:
+  # Rede externa onde o Traefik já vive. Crie/di­ga o nome real no .env.
+  proxy:
+    external: true
+    name: ${PROXY_NETWORK:-proxy}

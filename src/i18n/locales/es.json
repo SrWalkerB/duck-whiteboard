@@ -1,0 +1,120 @@
+{
+  "app": {
+    "title": "Duck Whiteboard"
+  },
+  "menu": {
+    "open": "Abrir menú",
+    "export": "Exportar",
+    "import": "Importar",
+    "exportFile": "Exportar archivo (.duck)",
+    "importFile": "Importar archivo (.duck)",
+    "exportPng": "Exportar como PNG",
+    "exportSvg": "Exportar como SVG",
+    "clearCanvas": "Limpiar lienzo",
+    "settings": "Configuración"
+  },
+  "theme": {
+    "toggle": "Cambiar tema",
+    "light": "Claro",
+    "dark": "Oscuro"
+  },
+  "stencils": {
+    "title": "Formas de arquitectura",
+    "openPanel": "Formas de arquitectura",
+    "hint": "Haz clic o arrastra al lienzo",
+    "search": "Buscar forma…",
+    "categories": {
+      "database": "Base de datos",
+      "server": "Servidor y Cloud",
+      "services": "Servicios y Colas",
+      "actors": "Actores y Almacenamiento"
+    },
+    "items": {
+      "database": "Base de datos",
+      "nosql": "NoSQL",
+      "server": "Servidor",
+      "cloud": "Nube",
+      "loadBalancer": "Balanceador de carga",
+      "cdn": "CDN",
+      "firewall": "Firewall",
+      "api": "API / Servicio",
+      "microservice": "Microservicio",
+      "queue": "Cola",
+      "cache": "Caché",
+      "gateway": "Gateway",
+      "user": "Usuario",
+      "mobile": "Móvil",
+      "storage": "Almacenamiento",
+      "container": "Contenedor"
+    }
+  },
+  "templates": {
+    "title": "Plantillas",
+    "items": {
+      "web3tier": "Web de 3 capas",
+      "microservices": "Microservicios"
+    }
+  },
+  "color": {
+    "stroke": "Contorno",
+    "fill": "Relleno",
+    "none": "Sin relleno",
+    "width": "Grosor",
+    "thin": "Fino",
+    "medium": "Medio",
+    "bold": "Grueso",
+    "hachure": "Rayado",
+    "solid": "Sólido",
+    "eraser": "Tamaño del borrador",
+    "eraserMode": "Modo del borrador",
+    "eraser_stroke": "Solo la parte",
+    "eraser_object": "Objeto entero"
+  },
+  "tools": {
+    "select": "Seleccionar",
+    "hand": "Mover lienzo",
+    "draw": "Lápiz",
+    "rectangle": "Rectángulo",
+    "ellipse": "Elipse",
+    "diamond": "Rombo",
+    "line": "Línea",
+    "arrow": "Flecha",
+    "text": "Texto",
+    "eraser": "Borrador",
+    "undo": "Deshacer",
+    "redo": "Rehacer"
+  },
+  "zoom": {
+    "in": "Acercar",
+    "out": "Alejar"
+  },
+  "group": {
+    "group": "Agrupar",
+    "ungroup": "Desagrupar"
+  },
+  "order": {
+    "toFront": "Traer al frente",
+    "forward": "Avanzar",
+    "backward": "Retroceder",
+    "toBack": "Enviar atrás"
+  },
+  "settings": {
+    "title": "Configuración",
+    "back": "Volver al lienzo",
+    "language": "Idioma",
+    "languageDescription": "Idioma de la interfaz y del editor",
+    "appearance": "Apariencia",
+    "darkMode": "Modo oscuro",
+    "data": "Datos",
+    "dataDescription": "El lienzo se guarda automáticamente en este navegador.",
+    "clear": "Limpiar lienzo"
+  },
+  "languages": {
+    "pt": "Portugués",
+    "en": "Inglés",
+    "es": "Español"
+  },
+  "confirm": {
+    "clear": "¿Seguro que quieres limpiar todo el lienzo? Esta acción no se puede deshacer."
+  }
+}

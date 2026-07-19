@@ -1,0 +1,120 @@
+{
+  "app": {
+    "title": "Duck Whiteboard"
+  },
+  "menu": {
+    "open": "Abrir menu",
+    "export": "Exportar",
+    "import": "Importar",
+    "exportFile": "Exportar arquivo (.duck)",
+    "importFile": "Importar arquivo (.duck)",
+    "exportPng": "Exportar como PNG",
+    "exportSvg": "Exportar como SVG",
+    "clearCanvas": "Limpar quadro",
+    "settings": "Configurações"
+  },
+  "theme": {
+    "toggle": "Alternar tema",
+    "light": "Claro",
+    "dark": "Escuro"
+  },
+  "stencils": {
+    "title": "Formas de arquitetura",
+    "openPanel": "Formas de arquitetura",
+    "hint": "Clique ou arraste para o quadro",
+    "search": "Buscar forma…",
+    "categories": {
+      "database": "Banco de dados",
+      "server": "Servidor & Cloud",
+      "services": "Serviços & Filas",
+      "actors": "Atores & Storage"
+    },
+    "items": {
+      "database": "Banco de dados",
+      "nosql": "NoSQL",
+      "server": "Servidor",
+      "cloud": "Nuvem",
+      "loadBalancer": "Load balancer",
+      "cdn": "CDN",
+      "firewall": "Firewall",
+      "api": "API / Serviço",
+      "microservice": "Microsserviço",
+      "queue": "Fila",
+      "cache": "Cache",
+      "gateway": "Gateway",
+      "user": "Usuário",
+      "mobile": "Mobile",
+      "storage": "Storage",
+      "container": "Container"
+    }
+  },
+  "templates": {
+    "title": "Templates",
+    "items": {
+      "web3tier": "Web 3 camadas",
+      "microservices": "Microsserviços"
+    }
+  },
+  "color": {
+    "stroke": "Contorno",
+    "fill": "Preenchimento",
+    "none": "Sem preenchimento",
+    "width": "Espessura",
+    "thin": "Fina",
+    "medium": "Média",
+    "bold": "Grossa",
+    "hachure": "Rabiscado",
+    "solid": "Sólido",
+    "eraser": "Tamanho da borracha",
+    "eraserMode": "Modo da borracha",
+    "eraser_stroke": "Só a parte",
+    "eraser_object": "Objeto todo"
+  },
+  "tools": {
+    "select": "Selecionar",
+    "hand": "Mover tela",
+    "draw": "Caneta",
+    "rectangle": "Retângulo",
+    "ellipse": "Elipse",
+    "diamond": "Losango",
+    "line": "Linha",
+    "arrow": "Seta",
+    "text": "Texto",
+    "eraser": "Borracha",
+    "undo": "Desfazer",
+    "redo": "Refazer"
+  },
+  "zoom": {
+    "in": "Aproximar",
+    "out": "Afastar"
+  },
+  "group": {
+    "group": "Agrupar",
+    "ungroup": "Desagrupar"
+  },
+  "order": {
+    "toFront": "Trazer para a frente",
+    "forward": "Avançar",
+    "backward": "Recuar",
+    "toBack": "Enviar para trás"
+  },
+  "settings": {
+    "title": "Configurações",
+    "back": "Voltar ao quadro",
+    "language": "Idioma",
+    "languageDescription": "Idioma da interface e do editor",
+    "appearance": "Aparência",
+    "darkMode": "Modo escuro",
+    "data": "Dados",
+    "dataDescription": "O quadro é salvo automaticamente neste navegador.",
+    "clear": "Limpar quadro"
+  },
+  "languages": {
+    "pt": "Português",
+    "en": "Inglês",
+    "es": "Espanhol"
+  },
+  "confirm": {
+    "clear": "Tem certeza que deseja limpar todo o quadro? Esta ação não pode ser desfeita."
+  }
+}

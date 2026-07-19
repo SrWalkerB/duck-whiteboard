@@ -1,0 +1,23 @@
+name: duckboard
+
+# Modo base: standalone HTTP. `docker compose up -d` já serve o app na
+# porta ${HTTP_PORT}. Combine com um override para outros modos:
+#   TLS próprio:   -f docker-compose.yml -f docker-compose.tls.yml
+#   Atrás do Traefik: -f docker-compose.yml -f docker-compose.traefik.yml
+# (o deploy.sh faz isso pra você: ./deploy.sh [http|tls|traefik])
+
+services:
+  web:
+    build:
+      # Contexto = raiz do repo; o Dockerfile fica em docker/.
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: ${IMAGE:-duck-whiteboard:latest}
+    container_name: ${CONTAINER_NAME:-duckboard}
+    restart: unless-stopped
+    environment:
+      # O que o Caddy interno escuta. :80 = HTTP puro (o TLS, se houver, é
+      # de um proxy na frente). No modo tls isto vira o domínio.
+      SITE_ADDRESS: ${SITE_ADDRESS:-:80}
+    ports:
+      - "${HTTP_PORT:-8080}:80"

@@ -1,0 +1,120 @@
+{
+  "app": {
+    "title": "Duck Whiteboard"
+  },
+  "menu": {
+    "open": "Open menu",
+    "export": "Export",
+    "import": "Import",
+    "exportFile": "Export file (.duck)",
+    "importFile": "Import file (.duck)",
+    "exportPng": "Export as PNG",
+    "exportSvg": "Export as SVG",
+    "clearCanvas": "Clear canvas",
+    "settings": "Settings"
+  },
+  "theme": {
+    "toggle": "Toggle theme",
+    "light": "Light",
+    "dark": "Dark"
+  },
+  "stencils": {
+    "title": "Architecture shapes",
+    "openPanel": "Architecture shapes",
+    "hint": "Click or drag onto the canvas",
+    "search": "Search shape…",
+    "categories": {
+      "database": "Database",
+      "server": "Server & Cloud",
+      "services": "Services & Queues",
+      "actors": "Actors & Storage"
+    },
+    "items": {
+      "database": "Database",
+      "nosql": "NoSQL",
+      "server": "Server",
+      "cloud": "Cloud",
+      "loadBalancer": "Load balancer",
+      "cdn": "CDN",
+      "firewall": "Firewall",
+      "api": "API / Service",
+      "microservice": "Microservice",
+      "queue": "Queue",
+      "cache": "Cache",
+      "gateway": "Gateway",
+      "user": "User",
+      "mobile": "Mobile",
+      "storage": "Storage",
+      "container": "Container"
+    }
+  },
+  "templates": {
+    "title": "Templates",
+    "items": {
+      "web3tier": "3-tier web app",
+      "microservices": "Microservices"
+    }
+  },
+  "color": {
+    "stroke": "Stroke",
+    "fill": "Fill",
+    "none": "No fill",
+    "width": "Width",
+    "thin": "Thin",
+    "medium": "Medium",
+    "bold": "Bold",
+    "hachure": "Hachure",
+    "solid": "Solid",
+    "eraser": "Eraser size",
+    "eraserMode": "Eraser mode",
+    "eraser_stroke": "Part only",
+    "eraser_object": "Whole object"
+  },
+  "tools": {
+    "select": "Select",
+    "hand": "Pan",
+    "draw": "Pen",
+    "rectangle": "Rectangle",
+    "ellipse": "Ellipse",
+    "diamond": "Diamond",
+    "line": "Line",
+    "arrow": "Arrow",
+    "text": "Text",
+    "eraser": "Eraser",
+    "undo": "Undo",
+    "redo": "Redo"
+  },
+  "zoom": {
+    "in": "Zoom in",
+    "out": "Zoom out"
+  },
+  "group": {
+    "group": "Group",
+    "ungroup": "Ungroup"
+  },
+  "order": {
+    "toFront": "Bring to front",
+    "forward": "Bring forward",
+    "backward": "Send backward",
+    "toBack": "Send to back"
+  },
+  "settings": {
+    "title": "Settings",
+    "back": "Back to canvas",
+    "language": "Language",
+    "languageDescription": "Interface and editor language",
+    "appearance": "Appearance",
+    "darkMode": "Dark mode",
+    "data": "Data",
+    "dataDescription": "The canvas is saved automatically in this browser.",
+    "clear": "Clear canvas"
+  },
+  "languages": {
+    "pt": "Portuguese",
+    "en": "English",
+    "es": "Spanish"
+  },
+  "confirm": {
+    "clear": "Are you sure you want to clear the whole canvas? This action cannot be undone."
+  }
+}
