@@ -39,12 +39,16 @@ abertas. O certificado é emitido e renovado sozinho.
 
 ## Modo traefik (atrás de um Traefik existente)
 
+Este é o modo usado com o **[`duck-enterprise-server`](../../duck-enterprise-server)**
+— o proxy central (Traefik único) que serve todos os apps `duck-*`. Os padrões
+do `.env` (`proxy` / `websecure` / `le`) já casam com ele.
+
 ```bash
 # .env:
 #   APP_DOMAIN=board.seudominio.com
-#   PROXY_NETWORK=proxy          # a rede onde o seu Traefik vive
-#   TRAEFIK_ENTRYPOINT=websecure # entrypoint HTTPS do seu Traefik
-#   CERT_RESOLVER=le             # certresolver configurado no seu Traefik
+#   PROXY_NETWORK=proxy          # a rede onde o Traefik vive
+#   TRAEFIK_ENTRYPOINT=websecure # entrypoint HTTPS do Traefik
+#   CERT_RESOLVER=le             # certresolver do Traefik
 ./deploy.sh traefik
 ```
 
