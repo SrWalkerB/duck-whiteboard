@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   ArrowUpRight,
@@ -43,14 +44,44 @@ const TOOLS: ToolDef[] = [
   { tool: 'eraser', icon: Eraser, key: 'eraser', shortcut: 'E' },
 ]
 
+const DOUBLE_CLICK_MS = 500
+
 export function Toolbar() {
+  const lastToolClick = useRef<{ tool: Tool; at: number } | null>(null)
   const { t } = useTranslation()
   const activeTool = useEngine((s) => s.activeTool)
   const setTool = useEngine((s) => s.setTool)
+  const setSelected = useEngine((s) => s.setSelected)
+  const setPropertiesPanelDismissed = useEngine(
+    (s) => s.setPropertiesPanelDismissed,
+  )
+  const setEditingText = useEngine((s) => s.setEditingText)
   const undo = useEngine((s) => s.undo)
   const redo = useEngine((s) => s.redo)
   const canUndo = useEngine((s) => s.past.length > 0)
   const canRedo = useEngine((s) => s.future.length > 0)
+
+  const dismissProperties = () => {
+    setSelected({})
+    setEditingText(null)
+    setPropertiesPanelDismissed(true)
+  }
+
+  const chooseTool = (tool: Tool) => {
+    setPropertiesPanelDismissed(false)
+    setTool(tool)
+  }
+
+  const handleToolClick = (tool: Tool) => {
+    const now = Date.now()
+    const previous = lastToolClick.current
+    const isDoubleClick =
+      previous?.tool === tool && now - previous.at <= DOUBLE_CLICK_MS
+
+    lastToolClick.current = isDoubleClick ? null : { tool, at: now }
+    if (isDoubleClick) dismissProperties()
+    else chooseTool(tool)
+  }
 
   return (
     <div className="pointer-events-auto absolute left-3 top-1/2 z-10 -translate-y-1/2">
@@ -65,7 +96,7 @@ export function Toolbar() {
                   data-tool={tool}
                   aria-label={t(`tools.${key}`)}
                   aria-pressed={active}
-                  onClick={() => setTool(tool)}
+                  onClick={() => handleToolClick(tool)}
                   className={cn(
                     'flex size-9 items-center justify-center rounded-xl transition-colors [&_svg]:size-[18px]',
                     active

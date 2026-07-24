@@ -17,6 +17,14 @@ import {
   normalizeElement,
   outlineElement,
 } from '@/lib/engine/factory'
+import {
+  arrowWorldPoints,
+  bindingForPoint,
+  isBindableElement,
+  pointForBinding,
+  refreshBoundArrows,
+  setArrowEndpoints,
+} from '@/lib/engine/bindings'
 import { canvasBackground, gridColor } from '@/lib/engine/theme-defaults'
 import { hasPoints, type DuckElement, type Point } from '@/lib/engine/types'
 import { ElementNode } from '@/lib/engine/render/renderElement'
@@ -49,6 +57,34 @@ function groupIdsFor(el: DuckElement, all: DuckElement[]): string[] {
 
 function idSet(ids: string[]): Record<string, true> {
   return Object.fromEntries(ids.map((id) => [id, true]))
+}
+
+function bindableTargetAt(
+  elements: DuckElement[],
+  point: Point,
+  tol: number,
+  excludedIds: Set<string> = new Set(),
+): DuckElement | undefined {
+  return elementsAtPoint(elements, point, tol).find(
+    (el) => !excludedIds.has(el.id) && isBindableElement(el),
+  )
+}
+
+function cursorForHandle(handle: Handle): string {
+  switch (handle) {
+    case 'n':
+    case 's':
+      return 'ns-resize'
+    case 'e':
+    case 'w':
+      return 'ew-resize'
+    case 'nw':
+    case 'se':
+      return 'nwse-resize'
+    case 'ne':
+    case 'sw':
+      return 'nesw-resize'
+  }
 }
 
 /** Rotate a point around a center by `angle` radians. */
@@ -102,8 +138,10 @@ export function Board() {
 
   // Guide circle following the cursor while the eraser is active (scene coords).
   const [eraserCursor, setEraserCursor] = React.useState<Point | null>(null)
+  const [selectionCursor, setSelectionCursor] = React.useState('default')
   React.useEffect(() => {
     if (activeTool !== 'eraser') setEraserCursor(null)
+    if (activeTool !== 'select') setSelectionCursor('default')
   }, [activeTool])
 
   const [marquee, setMarquee] = React.useState<{
@@ -142,7 +180,9 @@ export function Board() {
   const patch = React.useCallback(
     (fn: (el: DuckElement) => DuckElement, match: (el: DuckElement) => boolean) => {
       const s = useEngine.getState()
-      s.setElements(s.elements.map((el) => (match(el) ? fn(el) : el)))
+      s.setElements(
+        refreshBoundArrows(s.elements.map((el) => (match(el) ? fn(el) : el))),
+      )
     },
     [],
   )
@@ -206,6 +246,51 @@ export function Board() {
     if (changed) s.setElements(next)
   }, [])
 
+  const updateSelectionCursor = React.useCallback((scene: Point) => {
+    const s = useEngine.getState()
+    const box = selectionBounds(
+      s.elements.filter((el) => !el.isDeleted),
+      s.selectedIds,
+    )
+    if (!box) {
+      setSelectionCursor('default')
+      return
+    }
+
+    const grab = HANDLE_GRAB_PX / s.camera.zoom
+    const selected = s.elements.filter((el) => s.selectedIds[el.id])
+    const selectedArrow =
+      selected.length === 1 && selected[0].type === 'arrow'
+        ? selected[0]
+        : undefined
+    if (selectedArrow) {
+      const points = arrowWorldPoints(selectedArrow)
+      const endpoints = [points[0], points[points.length - 1]]
+      if (
+        endpoints.some(
+          (point) => Math.hypot(scene[0] - point[0], scene[1] - point[1]) <= grab * 1.5,
+        )
+      ) {
+        setSelectionCursor('crosshair')
+        return
+      }
+    }
+
+    const [rx, ry] = rotationHandlePos(box, s.camera.zoom)
+    if (Math.hypot(scene[0] - rx, scene[1] - ry) <= grab) {
+      setSelectionCursor('grab')
+      return
+    }
+
+    for (const [name, point] of Object.entries(handlePositions(box))) {
+      if (Math.hypot(scene[0] - point[0], scene[1] - point[1]) <= grab) {
+        setSelectionCursor(cursorForHandle(name as Handle))
+        return
+      }
+    }
+    setSelectionCursor('default')
+  }, [])
+
   // ---- Wheel: zoom (ctrl/pinch) or pan (trackpad) ----
   const onWheel = React.useCallback((e: React.WheelEvent) => {
     const s = useEngine.getState()
@@ -263,6 +348,28 @@ export function Board() {
         const box = selectionBounds(s.elements.filter((el) => !el.isDeleted), s.selectedIds)
         if (box) {
           const grab = HANDLE_GRAB_PX / s.camera.zoom
+          const selected = s.elements.filter((el) => s.selectedIds[el.id])
+          const selectedArrow =
+            selected.length === 1 && selected[0].type === 'arrow'
+              ? selected[0]
+              : undefined
+          if (selectedArrow) {
+            const points = arrowWorldPoints(selectedArrow)
+            const endpoints: Array<'start' | 'end'> = ['start', 'end']
+            for (const [index, endpoint] of endpoints.entries()) {
+              const point = points[index === 0 ? 0 : points.length - 1]
+              if (Math.hypot(scene[0] - point[0], scene[1] - point[1]) <= grab * 1.5) {
+                s.pushHistory()
+                interaction.current = {
+                  kind: 'binding-arrow-endpoint',
+                  id: selectedArrow.id,
+                  endpoint,
+                  orig: selectedArrow,
+                }
+                return
+              }
+            }
+          }
           // rotation handle first
           const [rhx, rhy] = rotationHandlePos(box, s.camera.zoom)
           if (Math.hypot(scene[0] - rhx, scene[1] - rhy) <= grab) {
@@ -348,8 +455,23 @@ export function Board() {
 
       if (tool === 'line' || tool === 'arrow') {
         s.pushHistory()
-        const el = createLinear(tool, scene, s.defaults)
-        s.setElements([...s.elements, el])
+        const created = createLinear(tool, scene, s.defaults)
+        const sourceTarget =
+          tool === 'arrow'
+            ? bindableTargetAt(
+                s.elements.filter((el) => !el.isDeleted),
+                scene,
+                tol,
+              )
+            : undefined
+        const el =
+          created.type === 'arrow' && sourceTarget
+            ? {
+                ...created,
+                startBinding: bindingForPoint(sourceTarget, [scene[0] + 1, scene[1]]),
+              }
+            : created
+        s.setElements(refreshBoundArrows([...s.elements, el]))
         interaction.current = { kind: 'creating', id: el.id, start: scene }
         return
       }
@@ -366,12 +488,17 @@ export function Board() {
   // ---- Pointer move ----
   const onPointerMove = React.useCallback(
     (e: React.PointerEvent) => {
-      if (useEngine.getState().activeTool === 'eraser') {
-        setEraserCursor(toScene(e))
-      }
-      const it = interaction.current
-      if (it.kind === 'none') return
       const s = useEngine.getState()
+      const it = interaction.current
+      const scene = toScene(e)
+      if (useEngine.getState().activeTool === 'eraser') {
+        setEraserCursor(scene)
+      }
+      if (it.kind === 'none') {
+        if (s.activeTool === 'select') updateSelectionCursor(scene)
+        else setSelectionCursor('default')
+        return
+      }
 
       if (it.kind === 'panning') {
         const dx = (e.clientX - it.startClient[0]) / s.camera.zoom
@@ -383,8 +510,6 @@ export function Board() {
         return
       }
 
-      const scene = toScene(e)
-
       if (it.kind === 'erasing') {
         eraseAt(scene)
         return
@@ -394,16 +519,50 @@ export function Board() {
         const el = s.elements.find((x) => x.id === it.id)
         if (!el) return
         if (el.type === 'line' || el.type === 'arrow') {
-          patch(
-            (x) => ({
-              ...x,
-              points: [
-                [0, 0],
-                [scene[0] - it.start[0], scene[1] - it.start[1]],
-              ] as Point[],
-            }),
-            (x) => x.id === it.id,
-          )
+          if (el.type === 'arrow') {
+            const tol = HIT_PX / s.camera.zoom
+            const sourceTarget = el.startBinding
+              ? s.elements.find((candidate) => candidate.id === el.startBinding!.elementId)
+              : undefined
+            const startBinding = sourceTarget
+              ? bindingForPoint(sourceTarget, scene)
+              : undefined
+            const start = sourceTarget && startBinding
+              ? pointForBinding(sourceTarget, startBinding)
+              : it.start
+            const target = bindableTargetAt(
+              s.elements.filter((candidate) => !candidate.isDeleted),
+              scene,
+              tol,
+              new Set([el.id, ...(sourceTarget ? [sourceTarget.id] : [])]),
+            )
+            const endBinding = target ? bindingForPoint(target, start) : undefined
+            const end = target && endBinding
+              ? pointForBinding(target, endBinding)
+              : scene
+            patch(
+              (x) =>
+                x.type === 'arrow'
+                  ? setArrowEndpoints(
+                      { ...x, startBinding, endBinding },
+                      start,
+                      end,
+                    )
+                  : x,
+              (x) => x.id === it.id,
+            )
+          } else {
+            patch(
+              (x) => ({
+                ...x,
+                points: [
+                  [0, 0],
+                  [scene[0] - it.start[0], scene[1] - it.start[1]],
+                ] as Point[],
+              }),
+              (x) => x.id === it.id,
+            )
+          }
         } else {
           const x = Math.min(it.start[0], scene[0])
           const y = Math.min(it.start[1], scene[1])
@@ -439,14 +598,52 @@ export function Board() {
         return
       }
 
+      if (it.kind === 'binding-arrow-endpoint') {
+        const arrow = s.elements.find((el) => el.id === it.id)
+        if (!arrow || arrow.type !== 'arrow') return
+        const original = it.orig.type === 'arrow' ? it.orig : arrow
+        const [origStart, origEnd] = arrowWorldPoints(original)
+        const fixed = it.endpoint === 'start' ? origEnd : origStart
+        const target = bindableTargetAt(
+          s.elements.filter((el) => !el.isDeleted),
+          scene,
+          HIT_PX / s.camera.zoom,
+          new Set([arrow.id]),
+        )
+        const binding = target ? bindingForPoint(target, fixed) : undefined
+        const moved = target && binding ? pointForBinding(target, binding) : scene
+        const start = it.endpoint === 'start' ? moved : fixed
+        const end = it.endpoint === 'end' ? moved : fixed
+        patch(
+          (el) =>
+            el.type === 'arrow'
+              ? setArrowEndpoints(
+                  {
+                    ...el,
+                    startBinding:
+                      it.endpoint === 'start' ? binding : original.startBinding,
+                    endBinding:
+                      it.endpoint === 'end' ? binding : original.endBinding,
+                  },
+                  start,
+                  end,
+                )
+              : el,
+          (el) => el.id === it.id,
+        )
+        return
+      }
+
       if (it.kind === 'translating') {
         const dx = scene[0] - it.start[0]
         const dy = scene[1] - it.start[1]
         s.setElements(
-          s.elements.map((el) => {
-            const o = it.orig.get(el.id)
-            return o ? { ...el, x: o[0] + dx, y: o[1] + dy } : el
-          }),
+          refreshBoundArrows(
+            s.elements.map((el) => {
+              const o = it.orig.get(el.id)
+              return o ? { ...el, x: o[0] + dx, y: o[1] + dy } : el
+            }),
+          ),
         )
         return
       }
@@ -475,10 +672,12 @@ export function Board() {
         }
         const origById = new Map(it.orig.map((el) => [el.id, el]))
         s.setElements(
-          s.elements.map((el) => {
-            const o = origById.get(el.id)
-            return o ? scaleElement(o, anchor, fx, fy) : el
-          }),
+          refreshBoundArrows(
+            s.elements.map((el) => {
+              const o = origById.get(el.id)
+              return o ? scaleElement(o, anchor, fx, fy) : el
+            }),
+          ),
         )
         return
       }
@@ -492,23 +691,25 @@ export function Board() {
         }
         const origById = new Map(it.orig.map((el) => [el.id, el]))
         s.setElements(
-          s.elements.map((el) => {
-            const o = origById.get(el.id)
-            if (!o) return el
-            const ec: Point = [o.x + o.width / 2, o.y + o.height / 2]
-            const [ncx, ncy] = rotateAround(ec, it.center, delta)
-            return {
-              ...el,
-              x: ncx - o.width / 2,
-              y: ncy - o.height / 2,
-              angle: o.angle + delta,
-            }
-          }),
+          refreshBoundArrows(
+            s.elements.map((el) => {
+              const o = origById.get(el.id)
+              if (!o) return el
+              const ec: Point = [o.x + o.width / 2, o.y + o.height / 2]
+              const [ncx, ncy] = rotateAround(ec, it.center, delta)
+              return {
+                ...el,
+                x: ncx - o.width / 2,
+                y: ncy - o.height / 2,
+                angle: o.angle + delta,
+              }
+            }),
+          ),
         )
         return
       }
     },
-    [toScene, patch, eraseAt],
+    [toScene, patch, eraseAt, updateSelectionCursor],
   )
 
   // ---- Pointer up ----
@@ -692,7 +893,7 @@ export function Board() {
       : activeTool === 'eraser'
         ? 'none'
         : activeTool === 'select'
-          ? 'default'
+          ? selectionCursor
           : 'crosshair'
 
   // Visible scene rect (for the dot grid).
@@ -714,7 +915,10 @@ export function Board() {
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
-        onPointerLeave={() => setEraserCursor(null)}
+        onPointerLeave={() => {
+          setEraserCursor(null)
+          setSelectionCursor('default')
+        }}
         onDoubleClick={onDoubleClick}
       >
         <defs>

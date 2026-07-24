@@ -70,6 +70,15 @@ export interface LinearElement extends BaseElement {
   type: 'line' | 'arrow'
   /** Points relative to (x, y); the bbox is normalized so they sit in [0,w]x[0,h]. */
   points: Point[]
+  /** Optional endpoint anchors that keep an arrow attached to shape elements. */
+  startBinding?: ArrowBinding
+  endBinding?: ArrowBinding
+}
+
+export interface ArrowBinding {
+  elementId: string
+  /** Relative position on the target's unrotated bounding box, from 0 to 1. */
+  focus: Point
 }
 
 export interface TextElement extends BaseElement {

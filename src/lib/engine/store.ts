@@ -11,6 +11,8 @@ export interface EngineState {
   camera: Camera
   selectedIds: Record<string, true>
   activeTool: Tool
+  /** Hides the tool-defaults panel until the user selects an object again. */
+  propertiesPanelDismissed: boolean
   editingTextId: string | null
   theme: Theme
   defaults: ItemDefaults
@@ -37,6 +39,7 @@ export interface EngineState {
   setViewport: (width: number, height: number) => void
   setSelected: (ids: Record<string, true>) => void
   setTool: (tool: Tool) => void
+  setPropertiesPanelDismissed: (dismissed: boolean) => void
   setEditingText: (id: string | null) => void
   setTheme: (theme: Theme) => void
   setDefaults: (patch: Partial<ItemDefaults>) => void
@@ -55,6 +58,7 @@ export const useEngine = create<EngineState>((set) => ({
   camera: { scrollX: 0, scrollY: 0, zoom: 1 },
   selectedIds: {},
   activeTool: 'select',
+  propertiesPanelDismissed: false,
   editingTextId: null,
   theme: 'light',
   defaults: themeDefaults('light'),
@@ -103,8 +107,16 @@ export const useEngine = create<EngineState>((set) => ({
 
   setCamera: (patch) => set((s) => ({ camera: { ...s.camera, ...patch } })),
   setViewport: (width, height) => set({ viewport: { width, height } }),
-  setSelected: (ids) => set({ selectedIds: ids }),
+  setSelected: (ids) =>
+    set((s) => ({
+      selectedIds: ids,
+      // A selected element is always actionable, so show its properties again.
+      propertiesPanelDismissed:
+        Object.keys(ids).length > 0 ? false : s.propertiesPanelDismissed,
+    })),
   setTool: (tool) => set({ activeTool: tool }),
+  setPropertiesPanelDismissed: (dismissed) =>
+    set({ propertiesPanelDismissed: dismissed }),
   setEditingText: (id) => set({ editingTextId: id }),
 
   setTheme: (theme) =>

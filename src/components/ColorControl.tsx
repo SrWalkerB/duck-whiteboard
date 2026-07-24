@@ -138,14 +138,21 @@ export function ColorControl() {
   const { t } = useTranslation()
   const selectedMap = useEngine((s) => s.selectedIds)
   const activeTool = useEngine((s) => s.activeTool)
+  const propertiesPanelDismissed = useEngine(
+    (s) => s.propertiesPanelDismissed,
+  )
   const defaults = useEngine((s) => s.defaults)
   const elements = useEngine((s) => s.elements)
   const editingTextId = useEngine((s) => s.editingTextId)
 
   const selectedIds = Object.keys(selectedMap)
-  if (activeTool === 'eraser') return <EraserPanel />
+  if (activeTool === 'eraser') {
+    return propertiesPanelDismissed ? null : <EraserPanel />
+  }
   const visible =
-    selectedIds.length > 0 || editingTextId !== null || CREATOR_TOOLS.has(activeTool)
+    selectedIds.length > 0 ||
+    editingTextId !== null ||
+    (!propertiesPanelDismissed && CREATOR_TOOLS.has(activeTool))
   if (!visible) return null
 
   // Prefer the selection, then the text being edited, so the panel highlights

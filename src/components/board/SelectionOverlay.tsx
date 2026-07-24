@@ -25,6 +25,19 @@ export function SelectionOverlay({
   const hs = 7 / zoom
   const handles = handlePositions(box)
   const [rx, ry] = rotationHandlePos(box, zoom)
+  const selected = elements.filter((el) => selectedIds[el.id])
+  const arrow = selected.length === 1 && selected[0].type === 'arrow'
+    ? selected[0]
+    : null
+  const endpoints = arrow && arrow.points.length >= 2
+    ? [
+        [arrow.x + arrow.points[0][0], arrow.y + arrow.points[0][1]],
+        [
+          arrow.x + arrow.points[arrow.points.length - 1][0],
+          arrow.y + arrow.points[arrow.points.length - 1][1],
+        ],
+      ]
+    : null
 
   return (
     <g style={{ pointerEvents: 'none' }}>
@@ -66,6 +79,17 @@ export function SelectionOverlay({
           fill="var(--background)"
           stroke="var(--pond)"
           strokeWidth={stroke}
+        />
+      ))}
+      {endpoints?.map(([x, y], i) => (
+        <circle
+          key={`arrow-endpoint-${i}`}
+          cx={x}
+          cy={y}
+          r={hs / 1.15}
+          fill="var(--background)"
+          stroke="var(--brand)"
+          strokeWidth={stroke * 1.25}
         />
       ))}
     </g>

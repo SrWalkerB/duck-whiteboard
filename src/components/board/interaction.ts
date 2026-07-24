@@ -32,6 +32,12 @@ export type Interaction =
       startAngle: number
       orig: DuckElement[]
     }
+  | {
+      kind: 'binding-arrow-endpoint'
+      id: string
+      endpoint: 'start' | 'end'
+      orig: DuckElement
+    }
 
 /** Selection bounding box for the given element ids. */
 export function selectionBounds(
