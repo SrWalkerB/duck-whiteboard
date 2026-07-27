@@ -1,6 +1,7 @@
 import * as React from 'react'
 
 import { useEngine } from '@/lib/engine/store'
+import { copySelection, pasteSelection, type BoardClipboard } from '@/lib/engine/clipboard'
 import { viewportToScene } from '@/lib/engine/coords'
 import {
   elementsAtPoint,
@@ -126,6 +127,7 @@ export function Board() {
   const interaction = React.useRef<Interaction>({ kind: 'none' })
   const spaceDown = React.useRef(false)
   const pointerId = React.useRef<number | null>(null)
+  const clipboard = React.useRef<BoardClipboard | null>(null)
 
   const elements = useEngine((s) => s.elements)
   const camera = useEngine((s) => s.camera)
@@ -817,6 +819,25 @@ export function Board() {
 
       const s = useEngine.getState()
       const meta = e.ctrlKey || e.metaKey
+      if (meta && (e.key === 'c' || e.key === 'C')) {
+        const nextClipboard = copySelection(s.elements, s.selectedIds)
+        if (nextClipboard) {
+          e.preventDefault()
+          clipboard.current = nextClipboard
+        }
+        return
+      }
+      if (meta && (e.key === 'v' || e.key === 'V')) {
+        if (clipboard.current) {
+          e.preventDefault()
+          const pasted = pasteSelection(clipboard.current)
+          clipboard.current.pasteCount += 1
+          s.commitElements([...s.elements, ...pasted.elements])
+          s.setSelected(pasted.selectedIds)
+          s.setTool('select')
+        }
+        return
+      }
       if (meta && (e.key === 'z' || e.key === 'Z')) {
         e.preventDefault()
         if (e.shiftKey) s.redo()
