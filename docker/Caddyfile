@@ -7,6 +7,12 @@
 	root * /srv
 	encode zstd gzip
 
+	# A API e o upgrade WebSocket ficam no mesmo domínio no deploy colaborativo.
+	@api path /api/*
+	reverse_proxy @api api:3001
+	@socketio path /socket.io/*
+	reverse_proxy @socketio api:3001
+
 	# SPA: qualquer rota desconhecida cai no index.html (TanStack Router).
 	try_files {path} /index.html
 	file_server

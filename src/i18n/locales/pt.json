@@ -11,6 +11,8 @@
     "exportPng": "Exportar como PNG",
     "exportSvg": "Exportar como SVG",
     "clearCanvas": "Limpar quadro",
+    "createRoom": "Criar sala colaborativa",
+    "creatingRoom": "Criando sala…",
     "settings": "Configurações"
   },
   "theme": {
@@ -87,6 +89,13 @@
   "zoom": {
     "in": "Aproximar",
     "out": "Afastar"
+  },
+  "presence": {
+    "you": "Você",
+    "connected": "Conectado",
+    "connecting": "Conectando…",
+    "reconnecting": "Reconectando…",
+    "participants": "{{count}} na sala"
   },
   "group": {
     "group": "Agrupar",

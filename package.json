@@ -3,10 +3,16 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "workspaces": [
+    "apps/api"
+  ],
   "scripts": {
     "dev": "vite",
+    "dev:api": "npm run dev --workspace @duckboard/api",
     "build": "tsc -b && vite build",
+    "build:api": "npm run build --workspace @duckboard/api",
     "lint": "oxlint",
+    "lint:api": "npm run lint --workspace @duckboard/api",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -29,6 +35,7 @@
     "react-dom": "^19.2.7",
     "react-i18next": "^17.0.10",
     "roughjs": "^4.6.4",
+    "socket.io-client": "^4.8.1",
     "tailwind-merge": "^3.6.0",
     "zustand": "^4.5.7"
   },

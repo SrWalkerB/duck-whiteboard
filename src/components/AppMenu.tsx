@@ -1,3 +1,4 @@
+import * as React from 'react'
 import type { DuckboardAPI } from '@/lib/engine/api'
 import { useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
@@ -8,6 +9,7 @@ import {
   Image,
   Menu,
   Settings,
+  Share2,
   Trash2,
 } from 'lucide-react'
 
@@ -30,17 +32,29 @@ import { clearScene } from '@/lib/persistence'
 
 interface AppMenuProps {
   api: DuckboardAPI | null
+  onCreateRoom?: () => Promise<void>
 }
 
-export function AppMenu({ api }: AppMenuProps) {
+export function AppMenu({ api, onCreateRoom }: AppMenuProps) {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const [creatingRoom, setCreatingRoom] = React.useState(false)
 
   const handleClear = () => {
     if (!api) return
     if (!window.confirm(t('confirm.clear'))) return
     api.updateScene({ elements: [], commit: true })
     clearScene()
+  }
+
+  const handleCreateRoom = async () => {
+    if (!onCreateRoom || creatingRoom) return
+    setCreatingRoom(true)
+    try {
+      await onCreateRoom()
+    } finally {
+      setCreatingRoom(false)
+    }
   }
 
   return (
@@ -68,6 +82,14 @@ export function AppMenu({ api }: AppMenuProps) {
           <DropdownMenuItem disabled={!api} onSelect={() => api && importSceneFile(api)}>
             <FileUp />
             {t('menu.importFile')}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            disabled={!api || !onCreateRoom || creatingRoom}
+            onSelect={() => void handleCreateRoom()}
+          >
+            <Share2 />
+            {creatingRoom ? t('menu.creatingRoom') : t('menu.createRoom')}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onSelect={() => navigate({ to: '/settings' })}>

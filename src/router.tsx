@@ -5,7 +5,7 @@ import {
   Outlet,
 } from '@tanstack/react-router'
 
-import { BoardPage } from '@/routes/BoardPage'
+import { BoardPage, RoomPage } from '@/routes/BoardPage'
 import { SettingsPage } from '@/routes/SettingsPage'
 
 const rootRoute = createRootRoute({
@@ -24,7 +24,13 @@ const settingsRoute = createRoute({
   component: SettingsPage,
 })
 
-const routeTree = rootRoute.addChildren([boardRoute, settingsRoute])
+const roomRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/r/$roomToken',
+  component: RoomPage,
+})
+
+const routeTree = rootRoute.addChildren([boardRoute, settingsRoute, roomRoute])
 
 export const router = createRouter({ routeTree })
 

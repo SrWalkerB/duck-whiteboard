@@ -12,13 +12,31 @@ import { insertSkeleton } from '@/lib/stencils/insert'
 import { SHAPE_DRAG_TYPE, resolveShape } from '@/lib/stencils'
 import { loadScene, saveScene, debounce } from '@/lib/persistence'
 import { useTheme } from '@/lib/theme'
+import { createRoom } from '@/lib/collaboration/api'
+import { CollaborationProvider } from '@/components/collaboration/CollaborationProvider'
+import { useNavigate, useParams } from '@tanstack/react-router'
 
 export function BoardPage() {
+  return <BoardShell persistLocally />
+}
+
+export function RoomPage() {
+  const { roomToken } = useParams({ from: '/r/$roomToken' })
+  return (
+    <CollaborationProvider token={roomToken}>
+      <BoardShell />
+    </CollaborationProvider>
+  )
+}
+
+function BoardShell({ persistLocally = false }: { persistLocally?: boolean }) {
   const { theme } = useTheme()
   const [stencilsOpen, setStencilsOpen] = React.useState(false)
+  const navigate = useNavigate()
 
   // Load persisted scene once, then autosave on every scene change (debounced).
   React.useEffect(() => {
+    if (!persistLocally) return
     const stored = loadScene()
     if (stored) useEngine.getState().setElements(stored)
 
@@ -29,7 +47,7 @@ export function BoardPage() {
       }
     })
     return unsub
-  }, [])
+  }, [persistLocally])
 
   // Keep the engine's theme (for defaults + board background) in sync.
   React.useEffect(() => {
@@ -51,6 +69,16 @@ export function BoardPage() {
     insertSkeleton(duckboardApi, resolved.key, resolved.skeleton, at)
   }
 
+  const handleCreateRoom = async () => {
+    const room = await createRoom(duckboardApi.getSceneElements())
+    try {
+      await navigator.clipboard?.writeText(new URL(room.path, location.origin).toString())
+    } catch {
+      // The room is still usable when the browser denies clipboard access.
+    }
+    navigate({ to: '/r/$roomToken', params: { roomToken: room.token } })
+  }
+
   return (
     <div
       className="relative h-full w-full overflow-hidden"
@@ -66,6 +94,7 @@ export function BoardPage() {
         api={duckboardApi}
         onToggleStencils={() => setStencilsOpen((v) => !v)}
         stencilsOpen={stencilsOpen}
+        onCreateRoom={persistLocally ? handleCreateRoom : undefined}
       />
       <StencilPanel
         api={duckboardApi}

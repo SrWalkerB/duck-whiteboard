@@ -1,7 +1,8 @@
 name: duckboard
 
-# Modo base: standalone HTTP. `docker compose up -d` já serve o app na
-# porta ${HTTP_PORT}. Combine com um override para outros modos:
+# Modo base: standalone HTTP. `docker compose up -d` serve o app na porta
+# ${HTTP_PORT}. O deploy.sh também inclui o overlay de colaboração por padrão.
+# Combine com um override para outros modos:
 #   TLS próprio:   -f docker-compose.yml -f docker-compose.tls.yml
 #   Atrás do Traefik: -f docker-compose.yml -f docker-compose.traefik.yml
 # (o deploy.sh faz isso pra você: ./deploy.sh [http|tls|traefik])

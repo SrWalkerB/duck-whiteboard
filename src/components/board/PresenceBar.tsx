@@ -1,58 +1,84 @@
-import * as React from 'react'
-import { User } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import { Users } from 'lucide-react'
 
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-
-interface Peer {
-  id: string
-  name: string
-  color: string
-}
-
-const PALETTE = ['#e5484d', '#0e7c86', '#8e4ec6', '#d9730d', '#30a46c', '#3b82f6']
-
-/**
- * Presence avatars, floating at the top. One random guest "joins" on mount —
- * this is the seam where a real WebSocket feed plugs in later (replace the mock
- * with a socket subscription; the render stays the same).
- */
-function usePeers(): Peer[] {
-  return React.useState<Peer[]>(() => {
-    const n = Math.floor(Math.random() * 90) + 10
-    return [
-      {
-        id: 'mock',
-        name: `Convidado ${n}`,
-        color: PALETTE[Math.floor(Math.random() * PALETTE.length)],
-      },
-    ]
-  })[0]
-}
+import { useCollaboration } from '@/components/collaboration/CollaborationProvider'
 
 export function PresenceBar() {
-  const peers = usePeers()
-  if (peers.length === 0) return null
+  const { t } = useTranslation()
+  const { roomActive, connected, ready, error, self, peers } = useCollaboration()
+  if (!roomActive || !self) return null
+
+  const participants = [self, ...peers]
+  const visibleParticipants = participants.slice(0, 4)
+  const remaining = participants.length - visibleParticipants.length
+  const status = error
+    ? t('presence.reconnecting')
+    : ready && connected
+      ? t('presence.connected')
+      : t('presence.connecting')
+  const isOnline = ready && connected && !error
 
   return (
-    <div className="pointer-events-auto absolute left-1/2 top-3 z-10 flex -translate-x-1/2 items-center gap-1 rounded-full border border-border/70 bg-card/90 px-1.5 py-1 shadow-lg backdrop-blur">
-      {peers.map((p) => (
-        <Tooltip key={p.id} delayDuration={200}>
-          <TooltipTrigger asChild>
-            <div
-              className="flex size-7 items-center justify-center rounded-full text-white ring-2 ring-card"
-              style={{ backgroundColor: p.color }}
-              aria-label={p.name}
-            >
-              <User className="size-4" />
-            </div>
-          </TooltipTrigger>
-          <TooltipContent side="bottom">{p.name}</TooltipContent>
-        </Tooltip>
-      ))}
-    </div>
+    <aside
+      aria-label={t('presence.participants', { count: participants.length })}
+      className="pointer-events-auto absolute right-3 top-20 z-10 flex items-center rounded-2xl border border-border/70 bg-card/95 p-1.5 shadow-lg backdrop-blur"
+    >
+      <span className="sr-only" aria-live="polite">
+        {t('presence.participants', { count: participants.length })}. {status}
+      </span>
+      <div className="flex -space-x-2.5">
+        {visibleParticipants.map((participant) => {
+          const initials = participant.name
+            .split(/\s+/)
+            .map((part) => part.charAt(0))
+            .join('')
+            .slice(0, 2)
+            .toUpperCase()
+          const isSelf = participant.id === self.id
+
+          return (
+            <Tooltip key={participant.id} delayDuration={200}>
+              <TooltipTrigger asChild>
+                <div
+                  className="relative flex size-8 items-center justify-center rounded-full text-[10px] font-bold tracking-wide text-white ring-2 ring-card"
+                  style={{ backgroundColor: participant.color }}
+                  aria-label={`${isSelf ? t('presence.you') : participant.name} · ${isSelf ? status : t('presence.connected')}`}
+                >
+                  {initials}
+                  {isSelf && (
+                    <span
+                      aria-hidden="true"
+                      className={`absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-card ${isOnline ? 'bg-emerald-500' : 'bg-amber-500'}`}
+                    />
+                  )}
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" align="end">
+                {isSelf ? t('presence.you') : participant.name}
+                <span className="text-muted-foreground"> · {isSelf ? status : t('presence.connected')}</span>
+              </TooltipContent>
+            </Tooltip>
+          )
+        })}
+        {remaining > 0 && (
+          <Tooltip delayDuration={200}>
+            <TooltipTrigger asChild>
+              <div className="flex size-8 items-center justify-center rounded-full bg-muted text-[10px] font-bold text-foreground ring-2 ring-card">
+                +{remaining}
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" align="end">
+              <Users className="mr-1.5 inline size-3.5" />
+              {t('presence.participants', { count: participants.length })}
+            </TooltipContent>
+          </Tooltip>
+        )}
+      </div>
+    </aside>
   )
 }

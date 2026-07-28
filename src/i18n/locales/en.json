@@ -11,6 +11,8 @@
     "exportPng": "Export as PNG",
     "exportSvg": "Export as SVG",
     "clearCanvas": "Clear canvas",
+    "createRoom": "Create collaborative room",
+    "creatingRoom": "Creating room…",
     "settings": "Settings"
   },
   "theme": {
@@ -87,6 +89,13 @@
   "zoom": {
     "in": "Zoom in",
     "out": "Zoom out"
+  },
+  "presence": {
+    "you": "You",
+    "connected": "Connected",
+    "connecting": "Connecting…",
+    "reconnecting": "Reconnecting…",
+    "participants": "{{count}} in the room"
   },
   "group": {
     "group": "Group",

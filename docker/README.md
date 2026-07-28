@@ -1,8 +1,8 @@
 # Deploy
 
-Duckboard é uma SPA estática (Vite). O `Dockerfile` faz o build e um **Caddy
-interno** serve os arquivos (fallback de SPA, gzip e cache de assets). O container
-é **proxy-agnóstico**: rode sozinho ou atrás de qualquer proxy.
+Duckboard tem uma SPA Vite servida por Caddy e, para salas colaborativas, uma API
+NestJS, worker, PostgreSQL, Redis e RabbitMQ. O Caddy encaminha `/api` e
+`/socket.io` internamente para a API, mantendo HTTP e WebSocket no mesmo domínio.
 
 Três modos, escolhidos pelo `deploy.sh`:
 
@@ -22,6 +22,36 @@ cp .env.example .env
 ```
 
 Abra `http://SEU_SERVIDOR:8080`.
+
+## Serviços colaborativos
+
+O `deploy.sh` inclui `docker-compose.collaboration.yml` por padrão. Portanto,
+qualquer deploy publicado sobe também PostgreSQL, Redis, RabbitMQ, a API NestJS e
+o worker de snapshots. Para desligar isso deliberadamente (quadro local apenas),
+defina `COLLABORATION_ENABLED=false` no `.env`.
+
+Em desenvolvimento, suba a infraestrutura e rode o Vite separado:
+
+```bash
+cd docker
+docker compose -f docker-compose.collaboration.yml up -d --build
+cd ..
+npm run dev
+```
+
+Para subir manualmente a mesma composição de produção:
+
+```bash
+cd docker
+docker compose -f docker-compose.yml -f docker-compose.collaboration.yml up -d --build
+```
+
+Antes do primeiro deploy, defina `POSTGRES_PASSWORD`, `RABBITMQ_PASSWORD` e
+`CORS_ORIGIN` no `docker/.env`. Em produção, `CORS_ORIGIN` deve ser o domínio
+público HTTPS do quadro. As portas da API e do painel RabbitMQ ficam restritas a
+`127.0.0.1`; usuários acessam o sistema apenas pelo Caddy. Antes do primeiro uso
+local fora do Docker, copie `apps/api/.env.example` para `apps/api/.env`. Execute a migration com
+`npm run prisma:migrate --workspace @duckboard/api`.
 
 ## Modo tls (HTTPS próprio, sem proxy)
 
@@ -86,6 +116,9 @@ cd docker && git pull && ./deploy.sh [modo]
 | `CERT_RESOLVER`      | `le`                | traefik  | Certresolver do Traefik.                 |
 | `IMAGE`              | `duck-whiteboard:latest` | todos | Nome/tag da imagem.                  |
 | `CONTAINER_NAME`     | `duckboard`         | todos    | Nome do container.                       |
+| `COLLABORATION_ENABLED` | `true`            | todos    | Sobe API, worker e infraestrutura de salas. |
+| `POSTGRES_PASSWORD` / `RABBITMQ_PASSWORD` | — | todos | Senhas obrigatórias dos serviços internos. |
+| `CORS_ORIGIN`        | localhost Vite      | todos    | Domínio permitido para API e WebSocket.   |
 
 ## Comandos úteis
 

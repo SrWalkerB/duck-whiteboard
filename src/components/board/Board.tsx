@@ -40,6 +40,7 @@ import {
 import { SelectionActions } from './SelectionActions'
 import { SelectionOverlay } from './SelectionOverlay'
 import { TextEditor } from './TextEditor'
+import { useCollaboration } from '@/components/collaboration/CollaborationProvider'
 
 const HIT_PX = 8
 const HANDLE_GRAB_PX = 10
@@ -135,6 +136,7 @@ export function Board() {
   const editingTextId = useEngine((s) => s.editingTextId)
   const viewport = useEngine((s) => s.viewport)
   const eraserSize = useEngine((s) => s.eraserSize)
+  const { sendPresence } = useCollaboration()
 
   // Guide circle following the cursor while the eraser is active (scene coords).
   const [eraserCursor, setEraserCursor] = React.useState<Point | null>(null)
@@ -482,7 +484,7 @@ export function Board() {
       s.setElements([...s.elements, el])
       interaction.current = { kind: 'creating', id: el.id, start: scene }
     },
-    [toScene, patch, eraseAt],
+    [toScene, eraseAt],
   )
 
   // ---- Pointer move ----
@@ -491,6 +493,7 @@ export function Board() {
       const s = useEngine.getState()
       const it = interaction.current
       const scene = toScene(e)
+      sendPresence({ cursor: scene })
       if (useEngine.getState().activeTool === 'eraser') {
         setEraserCursor(scene)
       }
@@ -709,7 +712,7 @@ export function Board() {
         return
       }
     },
-    [toScene, patch, eraseAt, updateSelectionCursor],
+    [toScene, patch, eraseAt, updateSelectionCursor, sendPresence],
   )
 
   // ---- Pointer up ----

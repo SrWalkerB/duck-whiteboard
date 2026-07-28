@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Deploy do Duckboard. Builda a imagem e (re)sobe o container no modo escolhido.
+# Deploy do Duckboard. Builda a SPA e os serviços colaborativos no modo escolhido.
 #
 # Uso:
 #   ./deploy.sh            # modo http (standalone, porta HTTP_PORT)
@@ -26,6 +26,12 @@ if [ ! -f .env ]; then
   exit 1
 fi
 
+# Carrega a configuração uma vez para decidir se os serviços colaborativos
+# também devem subir. O padrão é ligado: as salas fazem parte do app publicado.
+set -a
+. ./.env
+set +a
+
 # Seleciona os arquivos de compose conforme o modo.
 case "$MODE" in
   http)    FILES=(-f docker-compose.yml) ;;
@@ -34,9 +40,12 @@ case "$MODE" in
   *) echo "Modo inválido: $MODE (use: http | tls | traefik)" >&2; exit 1 ;;
 esac
 
+if [ "${COLLABORATION_ENABLED:-true}" = "true" ]; then
+  FILES+=(-f docker-compose.collaboration.yml)
+fi
+
 # No modo traefik, garante a rede externa compartilhada.
 if [ "$MODE" = "traefik" ]; then
-  set -a; . ./.env; set +a
   NET="${PROXY_NETWORK:-proxy}"
   if ! docker network inspect "$NET" >/dev/null 2>&1; then
     echo "==> Criando a rede '$NET' (ligue o Traefik a ela também)."

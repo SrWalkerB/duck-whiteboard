@@ -12,6 +12,7 @@ interface FloatingControlsProps {
   api: DuckboardAPI
   onToggleStencils: () => void
   stencilsOpen: boolean
+  onCreateRoom?: () => Promise<void>
 }
 
 const MIN_ZOOM = 0.1
@@ -21,6 +22,7 @@ export function FloatingControls({
   api,
   onToggleStencils,
   stencilsOpen,
+  onCreateRoom,
 }: FloatingControlsProps) {
   const { t } = useTranslation()
   const zoom = useEngine((s) => s.camera.zoom)
@@ -68,7 +70,7 @@ export function FloatingControls({
           {t('stencils.openPanel')}
         </Button>
         <ThemeToggle />
-        <AppMenu api={api} />
+        <AppMenu api={api} onCreateRoom={onCreateRoom} />
       </div>
 
       {/* Zoom — floating, bottom-right */}
